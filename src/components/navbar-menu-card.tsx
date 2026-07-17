@@ -19,7 +19,7 @@ export function NavbarMenuCard({
     <NavbarMenuLink href={page.url}>
       {imageSrc ? (
         <Image
-          src={imageSrc}
+          src={`https://j1n9h3.oss-cn-hangzhou.aliyuncs.com/${imageSrc}?x-oss-process=style/2webp`}
           alt={page.data.title}
           width={320}
           height={180}

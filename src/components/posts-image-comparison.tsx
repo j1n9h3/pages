@@ -30,7 +30,7 @@ export function ImageComparison({
         itemOne={
             <div className="relative h-full w-full">
             <ReactCompareSliderImage
-                src={before}
+                src={`https://j1n9h3.oss-cn-hangzhou.aliyuncs.com/${before}?x-oss-process=style/2webp`}
                 alt={beforeAlt}
                 className="h-full w-full object-cover"
             />
@@ -43,7 +43,7 @@ export function ImageComparison({
         itemTwo={
             <div className="relative h-full w-full">
             <ReactCompareSliderImage
-                src={after}
+                src={`https://j1n9h3.oss-cn-hangzhou.aliyuncs.com/${after}?x-oss-process=style/2webp`}
                 alt={afterAlt}
                 className="h-full w-full object-cover"
             />
