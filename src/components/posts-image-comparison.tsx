@@ -1,0 +1,61 @@
+"use client";
+
+import {
+  ReactCompareSlider,
+  ReactCompareSliderImage,
+} from "react-compare-slider";
+
+interface ImageComparisonProps {
+  before: string;
+  after: string;
+  beforeAlt?: string;
+  afterAlt?: string;
+  beforeLabel?: string;
+  afterLabel?: string;
+  position?: number;
+}
+
+export function ImageComparison({
+  before,
+  after,
+  beforeAlt = "对比图一",
+  afterAlt = "对比图二",
+  beforeLabel = "处理前",
+  afterLabel = "处理后",
+  position = 50,
+}: ImageComparisonProps) {
+  return (
+    <div className="my-8">
+        <ReactCompareSlider
+        position={position}
+        className="not-prose my-0 block aspect-video w-full overflow-hidden rounded-lg"
+        itemOne={
+            <div className="relative h-full w-full">
+            <ReactCompareSliderImage
+                src={before}
+                alt={beforeAlt}
+                className="h-full w-full object-cover"
+            />
+
+            <span className="absolute left-4 bottom-4 rounded bg-black/60 px-3 py-1 text-sm text-white">
+                {beforeLabel}
+            </span>
+            </div>
+        }
+        itemTwo={
+            <div className="relative h-full w-full">
+            <ReactCompareSliderImage
+                src={after}
+                alt={afterAlt}
+                className="h-full w-full object-cover"
+            />
+
+            <span className="absolute right-4 bottom-4 rounded bg-black/60 px-3 py-1 text-sm text-white">
+                {afterLabel}
+            </span>
+            </div>
+        }
+        />
+    </div>
+  );
+}

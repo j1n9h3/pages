@@ -1,0 +1,16 @@
+---
+title: 天空和大气的渲染 概述
+description: 行星尺度大气渲染发展脉络
+---
+
+| 年份 | 工作 | 主要推进 |
+|---|---|---|
+| 1993 | Nishita et al., *Display of the Earth Taking into Account Atmospheric Scattering* | 球形行星大气；Rayleigh/Mie 散射；从太空观察地球 |
+| 1996 | Nishita et al., *Display Method of the Sky Color Taking into Account Multiple Scattering* | 把多次散射纳入天空颜色计算，黄昏、地平线颜色更可信 |
+| 1999 | Preetham, Shirley, Smits, *A Practical Analytic Model for Daylight* | 非常便宜的解析天空模型；用浑浊度 turbidity 控制天气；成为早期实时图形标准方案 |
+| 2002–2005 | Hoffman & Preetham；Sean O’Neil | 将大气散射简化并搬到 GPU，推动游戏中的实时行星大气 |
+| 2008 | Bruneton & Neyret, *Precomputed Atmospheric Scattering* | 高维 LUT 预计算；支持地面—太空连续视角、任意太阳方向、Rayleigh/Mie 多次散射 |
+| 2010 | Elek & Kmoch, *Real-Time Spectral Scattering in Large-Scale Natural Participating Media* | 将 Bruneton 路线扩展为光谱计算、任意稠密行星大气，并加入大尺度水体 |
+| 2012 | Hošek & Wilkie, *An Analytic Model for Full Spectral Sky-Dome Radiance* | 改进 Preetham，尤其是日落和高浑浊度；加入地面反照率和光谱天空 |
+| 2020 | Hillaire, *A Scalable and Production Ready Sky and Atmosphere Rendering Technique* | 用几个低维 LUT 和实时多次散射近似取代笨重高维 LUT；适合现代游戏引擎 |
+| 2021 | Wilkie et al., *A Fitted Radiance and Attenuation Model for Realistic Atmospheres* | Prague Sky Model：实测大气分布拟合，支持日落后、观察高度、有限距离透射及偏振 |

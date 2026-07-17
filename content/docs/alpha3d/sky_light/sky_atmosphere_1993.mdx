@@ -1,0 +1,355 @@
+---
+title: 天空和大气的渲染 单次散射实现
+description: 基于 1993 年工作的大气渲染单次散射实现
+---
+
+import Image from 'next/image';
+import { ImageComparison } from "@/components/posts-image-comparison"
+
+
+<Image
+  src="/images/sky_atmosphere.png"
+  alt="天空和大气的渲染"
+  width={1920}
+  height={1080}
+  className="aspect-21/9 w-full rounded-md object-cover"
+/>
+
+## 理论推导及实现
+
+参照论文 [Nishita 1993 - Display of The Earth Taking into Account Atmospheric Scattering](https://dl.acm.org/doi/abs/10.1145/166117.166140) 实现。
+
+<Image
+  src="/images/sky_atmosphere_1993.svg"
+  alt="天空和大气的渲染"
+  width={320}
+  height={320}
+  className="m-auto object-cover"
+/>
+
+观察射线从观察点 $P_v$ 出发，在 $P_a$ 进入大气层，并在 $P_b$ 与地球表面相交，摄像机最终接收到两部分光：
+1. 路径 $P_aP_b$ 上的大气散射光 $I_v$。太阳光到达每个大气采样点 $P$ 后，一部分光被散射向观察者，并在传播到 $P_v$ 的过程中继续受到大气衰减。
+2. 地球表面的反射光 $I_e$。太阳光和天空光照亮地表 $P_b$，地表将光反射向观察者；这部分光在穿过 $P_bP_a$ 之间的大气时也会受到衰减。
+
+### 光散射的描述
+
+定义光的散射模型：输入波长为 $\lambda$ 的入射光强度，输出 $\theta$ 角度散射后的光强度。
+
+$$
+I(\lambda,\theta)=I_0(\lambda)\,K\rho\,\frac{F_R(\theta)}{\lambda^4}. \tag{1}
+$$
+
+其由 $K$、$\rho$ 和 $F_R(\theta)$ 描述。
+
+- $K$ 与空气分子物理性质有关，为常数；
+- $\rho$ 描述当前高度的相对空气密度，$\rho(h)=\exp\left(-\frac{h}{H_0}\right)$；
+- $F_R(\theta)$ 表示散射相函数，描述散射的方向分布。
+
+### 光学深度
+
+定义光沿整条路径传播时，沿途每一小段大气造成的消光作用之和。
+
+考虑路径上的一小段 $ds$。该处的大气密度比例是 $\rho(s)$，标准大气下单位长度的消光系数是 $\beta(\lambda)$，这一小段产生的光学深度为 $dt=\beta(\lambda)\rho(s)\,ds$。
+
+$$
+t(S,\lambda)
+=
+\int_0^S
+\beta(\lambda)\rho(s)\,ds
+=
+\frac{4\pi K}{\lambda^4}
+\int_0^S\rho(s)\,ds.
+\tag{2}
+$$
+
+### Beer–Lambert 衰减
+
+光穿过介质时，光强会随着传播距离按指数形式减小
+
+$$
+I_{\mathrm{out}}=I_{\mathrm{in}}e^{-\tau}. \tag{3}
+$$
+
+其中 $\tau$ 表示光学深度，$e^{-\tau}$ 即透射率(transmittance)，表示剩余的光比例。
+
+### 单次散射的路径积分
+
+假设 $I_s(\lambda)$ 为平行光，因此 $\theta$ 为常数，描述 $P$ 点的光照强度 $I_p(\lambda)$ 如下：
+
+$$
+I_p(\lambda)=I_s(\lambda)\,K \rho\,\frac{F_R(\theta)}{\lambda^4}\exp\left[-t(PP_c,\lambda)\right]. \tag{4}
+$$
+
+其中，光学深度描述如下：
+
+$$
+t(PP_c,\lambda)=\int_{P_c}^{P}\beta(l,\lambda)\rho(l)\,dl. \tag{5}
+$$
+
+
+由 Beer–Lambert 可以得到 $P$ 点的光照强度：
+
+$$
+I_{pv}(\lambda)=I_p(\lambda)\exp\left[-t(PP_a,\lambda)\right]. \tag{6}
+$$
+
+
+将式（4）代入式（6），可以得到采样点 $P$ 对观察点 $P_v$ 的光强贡献：
+
+$$
+I_{pv}(\lambda)=I_s(\lambda)\,K\rho(P)\,\frac{F_R(\theta)}{\lambda^4}\exp\left[-t(PP_c,\lambda)-t(PP_a,\lambda)\right]. \tag{7}
+$$
+
+累计路径 $P_bP_a$ 上的每个采样点的光强贡献，进行积分：
+
+$$
+I_v(\lambda)=\int_{P_b}^{P_a}I_{pv}(P,\lambda)\,ds. \tag{8}
+$$
+
+将式（7）代入式（8），得到：
+
+$$
+I_v(\lambda)=I_s(\lambda)\frac{K F_R(\theta)}{\lambda^4}\int_{P_b}^{P_a}\rho(P)\exp\left[-t(PP_c,\lambda)-t(PP_a,\lambda)\right]\,ds. \tag{9}
+$$
+
+根据散射系数的定义：
+
+$$
+\beta_R(\lambda)=\frac{4\pi K}{\lambda^4}, \tag{10}
+$$
+
+再定义归一化相函数：
+
+$$
+p_R(\theta)=\frac{F_R(\theta)}{4\pi}, \tag{11}
+$$
+
+则有：
+
+$$
+\beta_R(\lambda)p_R(\theta)=\frac{K F_R(\theta)}{\lambda^4}. \tag{12}
+$$
+
+因此，式（9）可以改写为：
+
+$$
+I_v(\lambda)=I_s(\lambda)\beta_R(\lambda)p_R(\theta)\int_{P_b}^{P_a}\rho_R(P)\exp\left[-t(PP_c,\lambda)-t(PP_a,\lambda)\right]\,ds. \tag{13}
+$$
+
+代入光学深度公式 (5)，得到：
+
+$$
+I_v(\lambda)
+=
+I_s(\lambda)\beta_R(\lambda)p_R(\theta)
+\int_{P_b}^{P_a}
+\rho_R(P)
+\exp\left[
+-\int_{P}^{P_c}
+\beta(l_1,\lambda)\rho(l_1)\,\mathrm{d}l_1
+-\int_{P}^{P_a}
+\beta(l_2,\lambda)\rho(l_2)\,\mathrm{d}l_2
+\right]
+\,\mathrm{d}s.
+\tag{14}
+$$
+
+### 伪代码
+
+```glsl
+for (int i = 0; i < PRIMARY_STEPS; ++i)
+{
+    ...
+    vec3 localDensity = AtmosphereDensity(height) * stepSize;
+    opticalDepth += localDensity;
+
+    for (int j = 0; j < LIGHT_STEPS; ++j)
+    {
+        ...
+        lightOpticalDepth += AtmosphereDensity(lightHeight) * lightStepSize;
+    }
+
+    vec3 combinedDepth = opticalDepth + lightOpticalDepth; 
+    vec3 attenuation = exp(-rayleighBeta * combinedDepth.x 
+                            - mieBeta * combinedDepth.y 
+                            - absorptionBeta * combinedDepth.z);
+    totalRayleigh += localDensity.x * attenuation;
+    totalMie += localDensity.y * attenuation;
+}
+
+vec3 transmittance = exp(-rayleighBeta * opticalDepth.x
+                            - mieBeta * opticalDepth.y
+                            - absorptionBeta * opticalDepth.z);
+vec3 scatteredLight = (rayleighPhase * rayleighBeta * totalRayleigh
+                        + miePhase * mieBeta * totalMie) * lightIntensity;
+return scatteredLight + background * transmittance;
+```
+
+### 完整实现
+
+见 github。
+
+
+## 效果
+
+
+### 可见光光谱
+
+
+可见光的波长大约位于 $380\text{–}780 \, \mathrm{nm}$。下图描述了波长从短到长，颜色的变化：
+
+
+<Image 
+  src="/images/sky_atmosphere/visible_spectrum.png"
+  alt="天空和大气的渲染"
+  width={600}
+  height={72}
+  className="rounded-md object-cover m-auto"
+/>
+
+整体关系可以表示为：
+
+$$
+\text{短波长}
+\rightarrow
+\text{紫、蓝、绿、黄、橙、红}
+\rightarrow
+\text{长波长}
+$$
+
+### 瑞利散射
+
+瑞利散射（Rayleigh）描述空气分子对光的散射，主要决定天空、大气边缘以及远距离景物的基础颜色。其散射强度近似与波长的四次方成反比：
+
+$$
+\beta_R(\lambda)\propto\frac{1}{\lambda^4}
+$$
+
+因此，波长较短的蓝光比波长较长的红光更容易被散射。
+
+
+白天，天空蓝光被更多地散射到观察者方向，使天空呈蓝色。
+
+<ImageComparison
+  before="/images/sky_atmosphere/sky_atmosphere_1993_rayleigh-wo-1.png"
+  after="/images/sky_atmosphere/sky_atmosphere_1993_rayleigh-w-1.png"
+  beforeAlt="None"
+  afterAlt="Rayleigh"
+  beforeLabel="None"
+  afterLabel="Rayleigh"
+/>
+
+日出和日落时，太阳光经过更长的大气路径，蓝光被大量散射出去，直射太阳光偏橙红色。
+
+<ImageComparison
+  before="/images/sky_atmosphere/sky_atmosphere_1993_rayleigh-wo-2.png"
+  after="/images/sky_atmosphere/sky_atmosphere_1993_rayleigh-w-2.png"
+  beforeAlt="None"
+  afterAlt="Rayleigh"
+  beforeLabel="None"
+  afterLabel="Rayleigh"
+/>
+
+瑞利散射相函数通常写为：
+
+$$
+p_R(\theta)=\frac{3}{16\pi}\left(1+\cos^2\theta\right)
+$$
+
+它表示散射光在前向和后向较强，在侧向相对较弱，并且前后方向基本对称。
+
+### 米氏散射
+
+米氏散射（Mie）用于描述气溶胶、灰尘、水滴等较大颗粒对光的散射。米氏散射通常具有明显的前向散射特征，即光更容易沿原来的传播方向被散射。因此，朝太阳方向观察时会看到更强的亮度和光晕。
+
+通常使用 Henyey–Greenstein 相函数近似其方向分布：
+
+$$
+p_M(\theta)
+=
+\frac{1-g^2}
+{4\pi\left(1+g^2-2g\cos\theta\right)^{3/2}}
+$$
+
+其中 $g$ 是米氏各向异性系数：
+
+| $g$ | 散射方向 |
+|:---:|:---:|
+| $= 0$ | 各向同性散射 |
+| $> 0$ | 前向散射 |
+| $< 0$ | 后向散射 |
+| $\rightarrow 1$ | 高度集中的前向散射 |
+
+实现中 $g=0.7$，表示具有比较明显的前向散射，所以太阳周围会形成较集中的亮光晕。
+
+<ImageComparison
+  before="/images/sky_atmosphere/sky_atmosphere_1993_mie-wo-1.png"
+  after="/images/sky_atmosphere/sky_atmosphere_1993_mie-w-1.png"
+  beforeAlt="Rayleigh"
+  afterAlt="Rayleigh + Mie"
+  beforeLabel="Rayleigh"
+  afterLabel="Rayleigh + Mie"
+/>
+
+三个颜色通道受到近似相同强度的散射，Mie 散射通常表现为白色或灰白色，而不像 Rayleigh 散射那样明显偏蓝。
+
+### 臭氧吸收
+
+臭氧层选择性地削弱部分可见光，臭氧对绿光吸收最强，对红光次之，对蓝光最弱（$\beta_G \gt \beta_R \gt \beta_B$）。
+
+
+日出、日落时，光在大气中的传播路径变长，臭氧对绿色和黄绿色成分的选择性吸收更加明显，从而改变天空的色彩平衡，使部分区域呈现更明显的蓝紫色或粉紫色过渡。
+
+<ImageComparison
+  before="/images/sky_atmosphere/sky_atmosphere_1993_absorption-wo-2.png"
+  after="/images/sky_atmosphere/sky_atmosphere_1993_absorption-w-2.png"
+  beforeAlt="Rayleigh + Mie"
+  afterAlt="Rayleigh + Mie + Absorption"
+  beforeLabel="Rayleigh + Mie"
+  afterLabel="Rayleigh + Mie + Absorption"
+/>
+
+
+从太空观察时，大气分子产生的瑞利散射使行星边缘呈现蓝色光环，臭氧吸收会进一步削弱部分红光和绿光，从而改变并强化大气边缘的颜色表现。
+
+<ImageComparison
+  before="/images/sky_atmosphere/sky_atmosphere_1993_absorption-wo-1.png"
+  after="/images/sky_atmosphere/sky_atmosphere_1993_absorption-w-1.png"
+  beforeAlt="Rayleigh + Mie"
+  afterAlt="Rayleigh + Mie + Absorption"
+  beforeLabel="Rayleigh + Mie"
+  afterLabel="Rayleigh + Mie + Absorption"
+/>
+
+
+### 附：预设的超参数
+
+行星与大气几何参数定义行星及其大气层的球形几何范围：
+
+| 超参数 | 值 | 说明 |
+|---|:---:|---|
+| 行星半径 | $6,371,000.0 \, \mathrm{m}$ | 行星表面的球体半径，此处采用近似地球平均半径 |
+| 大气层半径 | $6,471,000.0 \, \mathrm{m}$ | 大气层外边界半径，对应约 100 km 的大气层厚度 |
+
+大气光学参数描述不同大气成分对光线产生的散射和吸收强度：
+
+| 超参数 | R 通道 | G 通道 | B 通道 | 说明 |
+|---|:---:|:---:|:---:|---|
+| 瑞利散射系数 | $5.5 \times 10^{-6}\,\mathrm{m}^{-1}$ | $13.0 \times 10^{-6}\,\mathrm{m}^{-1}$ | $22.4 \times 10^{-6}\,\mathrm{m}^{-1}$ | $\beta_{R,B}>\beta_{R,G}>\beta_{R,R}$，蓝光的散射最强，红光的散射最弱 |
+| 米氏散射系数 | $21.0 \times 10^{-6}\,\mathrm{m}^{-1}$ | $21.0 \times 10^{-6}\,\mathrm{m}^{-1}$ | $21.0 \times 10^{-6}\,\mathrm{m}^{-1}$ |  $\beta_{M,R}=\beta_{M,G}=\beta_{M,B}$，三个通道的散射强度相同，近似不改变光的颜色，主要影响太阳光晕、雾霾和地平线亮度 |
+| 吸收系数 | $2.04 \times 10^{-5}\,\mathrm{m}^{-1}$ | $4.97 \times 10^{-5}\,\mathrm{m}^{-1}$ | $1.95 \times 10^{-6}\,\mathrm{m}^{-1}$ |  $\beta_{A,G}>\beta_{A,R}>\beta_{A,B}$，绿光吸收最强，蓝光吸收最弱 |
+
+大气密度分布参数控制空气分子、气溶胶及吸收介质的密度如何随海拔高度变化：
+
+| 超参数 | 值 | 说明 |
+|---|:---:|---|
+| 瑞利散射标高 | $8,000.0  \, \mathrm{m}$ | 空气分子密度随高度指数衰减的尺度高度 |
+| 米氏散射标高 | $1,200.0  \, \mathrm{m}$ | 气溶胶密度随高度指数衰减的尺度高度 |
+| 吸收层中心高度 | $30,000.0  \, \mathrm{m}$ | 吸收介质密度最大的高度，通常对应臭氧层附近 |
+| 吸收层衰减高度 | $4,000.0  \, \mathrm{m}$ | 吸收介质密度偏离中心高度后的衰减尺度 |
+
+散射方向参数描述光被大气微粒散射后的方向分布：
+
+| 超参数 | 值 | 说明 |
+|---|:---:|---|
+| 米氏各向异性系数 | $0.7$ | 控制米氏散射的方向性；值越接近 1，前向散射越强，太阳周围的光晕越集中 |
