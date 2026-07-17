@@ -3,28 +3,28 @@ title: 天空和大气的渲染 单次散射实现
 description: 基于 1993 年工作的大气渲染单次散射实现
 ---
 
-import Image from 'next/image';
+import { OssImage } from "@/components/posts-image";
 import { ImageComparison } from "@/components/posts-image-comparison"
 
 
-<Image
-  src="/images/sky_atmosphere.png"
+<OssImage
+  src="images/sky_atmosphere/sky_atmosphere_1993_poster.png"
   alt="天空和大气的渲染"
   width={1920}
-  height={1080}
-  className="aspect-21/9 w-full rounded-md object-cover"
+  height={538}
+  caption="图1：天空和大气的渲染效果"
 />
 
 ## 理论推导及实现
 
 参照论文 [Nishita 1993 - Display of The Earth Taking into Account Atmospheric Scattering](https://dl.acm.org/doi/abs/10.1145/166117.166140) 实现。
 
-<Image
-  src="/images/sky_atmosphere_1993.svg"
+<OssImage
+  src="images/sky_atmosphere_1993.svg"
   alt="天空和大气的渲染"
   width={320}
   height={320}
-  className="m-auto object-cover"
+  caption="图1：天空和大气的渲染效果"
 />
 
 观察射线从观察点 $P_v$ 出发，在 $P_a$ 进入大气层，并在 $P_b$ 与地球表面相交，摄像机最终接收到两部分光：
@@ -199,13 +199,13 @@ return scatteredLight + background * transmittance;
 可见光的波长大约位于 $380\text{–}780 \, \mathrm{nm}$。下图描述了波长从短到长，颜色的变化：
 
 
-<Image 
+<OssImage
   src="/images/sky_atmosphere/visible_spectrum.png"
   alt="天空和大气的渲染"
   width={600}
   height={72}
-  className="rounded-md object-cover m-auto"
 />
+
 
 整体关系可以表示为：
 
