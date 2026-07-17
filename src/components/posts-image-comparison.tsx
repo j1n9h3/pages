@@ -22,12 +22,10 @@ export function ImageComparison({
   afterAlt = "对比图二",
   beforeLabel = "处理前",
   afterLabel = "处理后",
-  position = 50,
 }: ImageComparisonProps) {
   return (
     <div className="my-8">
         <ReactCompareSlider
-        position={position}
         className="not-prose my-0 block aspect-video w-full overflow-hidden rounded-lg"
         itemOne={
             <div className="relative h-full w-full">
