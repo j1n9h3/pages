@@ -6,10 +6,17 @@ export default function HomePage() {
       <h1 className="text-2xl font-bold mb-4">Hello World</h1>
       <p>
         You can open{' '}
-        <Link href="/docs" className="font-medium underline">
-          /docs
+        <Link href="/docs/rendering" className="font-medium underline">
+          /docs/rendering
         </Link>{' '}
-        and see the documentation.
+        
+        and{' '}
+
+        <Link href="/docs/animation" className="font-medium underline">
+          /docs/animation
+        </Link>{' '}
+
+        to see the documentation.
       </p>
     </div>
   );

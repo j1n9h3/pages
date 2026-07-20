@@ -7,7 +7,6 @@ import {
   NavbarMenuTrigger,
 } from 'fumadocs-ui/layouts/home/navbar';
 import Image from 'next/image';
-import { NavbarMenuCard } from '@/components/navbar-menu-card'
 
 
 export function baseOptions(): BaseLayoutProps {
@@ -18,29 +17,12 @@ export function baseOptions(): BaseLayoutProps {
     },
     links: [
         {
-          type: 'custom',
-          // only displayed on navbar, not mobile menu
+          // icon: <BookIcon />,
+          text: 'ABOUT ME',
+          url: '/about-me',
           on: 'nav',
-          children: (
-            <NavbarMenu>
-              <NavbarMenuTrigger>ALPHA3D</NavbarMenuTrigger>
-              <NavbarMenuContent>
-
-                <NavbarMenuCard
-                    slug={['alpha3d', 'sky_light', 'sky_atmosphere_1993']}
-                    imageSrc="/images/sky_atmosphere.png"
-                  />
-                
-                <NavbarMenuCard
-                    slug={['alpha3d', 'material', 'pbr']}
-                    imageSrc="/images/pbr.png"
-                  />
-
-
-              </NavbarMenuContent>
-
-            </NavbarMenu>
-          ),
+          // secondary items will be displayed differently on navbar
+          secondary: true,
         },
         // other items
     ],
