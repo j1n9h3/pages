@@ -9,6 +9,7 @@ import {
 import Image from 'next/image';
 import { NavbarMenuCard } from '@/components/navbar-menu-card'
 
+
 export function baseOptions(): BaseLayoutProps {
   return {
     nav: {

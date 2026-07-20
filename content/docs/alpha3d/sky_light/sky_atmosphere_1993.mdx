@@ -1,19 +1,34 @@
 ---
-title: 天空和大气的渲染 基础
-description: 基于 1993 年工作的大气渲染单次散射实现
+title: 天空和大气的渲染 单散射实现
+description: 参考 1993 年工作的大气渲染单次散射实现
 ---
 
-import { OssImage } from "@/components/posts-image";
-import { ImageComparison } from "@/components/posts-image-comparison"
-
-
-<OssImage
-  src="images/sky_atmosphere/sky_atmosphere_1993_poster.png"
-  alt="天空和大气的渲染"
-  width={1920}
-  height={538}
-  caption="图1：天空和大气的渲染效果"
+<ImageSequenceSlider
+  images={[
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-57.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-58.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-59.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-60.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-61.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-62.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-63.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-64.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-65.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-66.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-67.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-69.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-70.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-71.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-72.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-73.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-74.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-75.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-76.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-77.png",
+    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-78.png",
+  ]}
 />
+
 
 参照论文 [Nishita 1993 - Display of The Earth Taking into Account Atmospheric Scattering](https://dl.acm.org/doi/abs/10.1145/166117.166140) 实现。
 

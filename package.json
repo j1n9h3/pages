@@ -22,6 +22,7 @@
     "react": "^19.2.7",
     "react-compare-slider": "^4.0.0",
     "react-dom": "^19.2.7",
+    "react-scroll-media": "^1.1.0",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0"
   },
