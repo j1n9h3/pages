@@ -1,5 +1,5 @@
 ---
-title: 天空和大气的渲染 单次散射实现
+title: 天空和大气的渲染 基础
 description: 基于 1993 年工作的大气渲染单次散射实现
 ---
 
@@ -15,8 +15,6 @@ import { ImageComparison } from "@/components/posts-image-comparison"
   caption="图1：天空和大气的渲染效果"
 />
 
-## 理论推导及实现
-
 参照论文 [Nishita 1993 - Display of The Earth Taking into Account Atmospheric Scattering](https://dl.acm.org/doi/abs/10.1145/166117.166140) 实现。
 
 <OssImage
@@ -31,7 +29,7 @@ import { ImageComparison } from "@/components/posts-image-comparison"
 1. 路径 $P_aP_b$ 上的大气散射光 $I_v$。太阳光到达每个大气采样点 $P$ 后，一部分光被散射向观察者，并在传播到 $P_v$ 的过程中继续受到大气衰减。
 2. 地球表面的反射光 $I_e$。太阳光和天空光照亮地表 $P_b$，地表将光反射向观察者；这部分光在穿过 $P_bP_a$ 之间的大气时也会受到衰减。
 
-### 光散射的描述
+## 光散射的描述
 
 定义光的散射模型：输入波长为 $\lambda$ 的入射光强度，输出 $\theta$ 角度散射后的光强度。
 
@@ -45,7 +43,7 @@ $$
 - $\rho$ 描述当前高度的相对空气密度，$\rho(h)=\exp\left(-\frac{h}{H_0}\right)$；
 - $F_R(\theta)$ 表示散射相函数，描述散射的方向分布。
 
-### 光学深度
+## 光学深度
 
 定义光沿整条路径传播时，沿途每一小段大气造成的消光作用之和。
 
@@ -62,7 +60,7 @@ t(S,\lambda)
 \tag{2}
 $$
 
-### Beer–Lambert 衰减
+## Beer–Lambert 衰减
 
 光穿过介质时，光强会随着传播距离按指数形式减小
 
@@ -72,7 +70,7 @@ $$
 
 其中 $\tau$ 表示光学深度，$e^{-\tau}$ 即透射率(transmittance)，表示剩余的光比例。
 
-### 单次散射的路径积分
+## 单次散射的路径积分
 
 假设 $I_s(\lambda)$ 为平行光，因此 $\theta$ 为常数，描述 $P$ 点的光照强度 $I_p(\lambda)$ 如下：
 
@@ -154,7 +152,7 @@ I_s(\lambda)\beta_R(\lambda)p_R(\theta)
 \tag{14}
 $$
 
-### 伪代码
+## 伪代码
 
 ```glsl
 for (int i = 0; i < PRIMARY_STEPS; ++i)
@@ -185,15 +183,7 @@ vec3 scatteredLight = (rayleighPhase * rayleighBeta * totalRayleigh
 return scatteredLight + background * transmittance;
 ```
 
-### 完整实现
-
-见 github。
-
-
-## 效果
-
-
-### 可见光光谱
+## 可见光光谱
 
 
 可见光的波长大约位于 $380\text{–}780 \, \mathrm{nm}$。下图描述了波长从短到长，颜色的变化：
@@ -217,7 +207,7 @@ $$
 \text{长波长}
 $$
 
-### 瑞利散射
+## 瑞利散射
 
 瑞利散射（Rayleigh）描述空气分子对光的散射，主要决定天空、大气边缘以及远距离景物的基础颜色。其散射强度近似与波长的四次方成反比：
 
@@ -258,7 +248,7 @@ $$
 
 它表示散射光在前向和后向较强，在侧向相对较弱，并且前后方向基本对称。
 
-### 米氏散射
+## 米氏散射
 
 米氏散射（Mie）用于描述气溶胶、灰尘、水滴等较大颗粒对光的散射。米氏散射通常具有明显的前向散射特征，即光更容易沿原来的传播方向被散射。因此，朝太阳方向观察时会看到更强的亮度和光晕。
 
@@ -293,7 +283,7 @@ $$
 
 三个颜色通道受到近似相同强度的散射，Mie 散射通常表现为白色或灰白色，而不像 Rayleigh 散射那样明显偏蓝。
 
-### 臭氧吸收
+## 臭氧吸收
 
 臭氧层选择性地削弱部分可见光，臭氧对绿光吸收最强，对红光次之，对蓝光最弱（$\beta_G \gt \beta_R \gt \beta_B$）。
 
@@ -322,7 +312,7 @@ $$
 />
 
 
-### 附：预设的超参数
+## 附：预设的超参数
 
 行星与大气几何参数定义行星及其大气层的球形几何范围：
 

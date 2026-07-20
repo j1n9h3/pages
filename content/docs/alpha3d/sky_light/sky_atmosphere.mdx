@@ -3,14 +3,39 @@ title: 天空和大气的渲染 概述
 description: 行星尺度大气渲染发展脉络
 ---
 
-| 年份 | 工作 | 主要推进 |
-|---|---|---|
-| 1993 | Nishita et al., *Display of the Earth Taking into Account Atmospheric Scattering* | 球形行星大气；Rayleigh/Mie 散射；从太空观察地球 |
-| 1996 | Nishita et al., *Display Method of the Sky Color Taking into Account Multiple Scattering* | 把多次散射纳入天空颜色计算，黄昏、地平线颜色更可信 |
-| 1999 | Preetham, Shirley, Smits, *A Practical Analytic Model for Daylight* | 非常便宜的解析天空模型；用浑浊度 turbidity 控制天气；成为早期实时图形标准方案 |
-| 2002–2005 | Hoffman & Preetham；Sean O’Neil | 将大气散射简化并搬到 GPU，推动游戏中的实时行星大气 |
-| 2008 | Bruneton & Neyret, *Precomputed Atmospheric Scattering* | 高维 LUT 预计算；支持地面—太空连续视角、任意太阳方向、Rayleigh/Mie 多次散射 |
-| 2010 | Elek & Kmoch, *Real-Time Spectral Scattering in Large-Scale Natural Participating Media* | 将 Bruneton 路线扩展为光谱计算、任意稠密行星大气，并加入大尺度水体 |
-| 2012 | Hošek & Wilkie, *An Analytic Model for Full Spectral Sky-Dome Radiance* | 改进 Preetham，尤其是日落和高浑浊度；加入地面反照率和光谱天空 |
-| 2020 | Hillaire, *A Scalable and Production Ready Sky and Atmosphere Rendering Technique* | 用几个低维 LUT 和实时多次散射近似取代笨重高维 LUT；适合现代游戏引擎 |
-| 2021 | Wilkie et al., *A Fitted Radiance and Attenuation Model for Realistic Atmospheres* | Prague Sky Model：实测大气分布拟合，支持日落后、观察高度、有限距离透射及偏振 |
+
+1993 年，Nishita 等人在 *[Display of the Earth Taking into Account Atmospheric Scattering](https://dl.acm.org/doi/abs/10.1145/166117.166140)* 中建立了面向球形行星大气的散射模型，同时考虑 Rayleigh 散射和 Mie 散射，使从太空观察地球及其大气层成为可能。
+
+1996 年，他们又在 *[Display Method of the Sky Color Taking into Account Multiple Scattering](https://www.researchgate.net/publication/242513955_Display_method_of_the_sky_color_taking_into_account_multiple_scattering)* 中将多次散射纳入天空颜色计算，从而更加可信地表现黄昏和地平线附近的复杂色彩。
+
+这类方法需要沿视线进行大量采样，并在离散化的大气空间中计算散射，其计算与存储开销较高，难以直接满足实时渲染需求。
+
+---
+
+1999 年，Preetham、Shirley 和 Smits 提出了 *[A Practical Analytic Model for Daylight](https://dl.acm.org/doi/10.1145/311535.311545)*。该模型采用计算成本很低的解析表达式，并以浑浊度（turbidity）作为控制天气和气溶胶状况的核心参数，因此成为早期实时图形中广泛采用的天空渲染方案。
+
+2002—2005 年间，Hoffman、Preetham 与 Sean O’Neil 等人进一步简化大气散射计算并将其移植到 GPU，推动了实时行星大气效果在游戏和交互式图形中的应用。
+
+这类方法通常依赖经验拟合、有限采样和单次散射近似，在高浑浊度、日出日落以及从地面到太空连续移动的场景中容易产生明显误差。
+
+---
+
+2007 年，Schafhitzel、Falk 和 Ertl 在 *[Real-Time Rendering of Planets with Atmospheres](http://wscg.zcu.cz/wscg2007/Papers_2007/journal/E61-full.pdf)* 中，将基于 Nishita 模型的大气散射与连续细节层次的球形地形渲染结合起来，衔接了早期 GPU 简化方案与后来的高维查找表方法。
+
+他们通过预计算光线衰减积分并将结果存入三维 LUT，再由 GPU 根据观察位置和光照条件查询，实现了与地形几何相对独立的实时行星大气渲染，并在地球和火星场景中进行了展示。
+
+该方法主要考虑单次散射，且预计算结果与特定的行星及大气参数绑定，难以灵活支持多次散射和动态变化的大气条件。
+
+---
+
+2008 年，Bruneton 和 Neyret 在 *Precomputed Atmospheric Scattering* 中提出了系统化的高维查找表预计算方法。该方法支持从地面到太空的连续观察视角、任意太阳方向，以及 Rayleigh 和 Mie 多次散射，成为此后物理大气渲染的重要基础。
+
+2010 年，Elek 和 Kmoch 在 *Real-Time Spectral Scattering in Large-Scale Natural Participating Media* 中将这一技术路线扩展到光谱计算和任意稠密度的行星大气，并进一步加入大尺度水体的渲染。
+
+---
+
+2012 年，Hošek 和 Wilkie 提出了 *An Analytic Model for Full Spectral Sky-Dome Radiance*，对 Preetham 模型进行了显著改进，尤其提升了日落和高浑浊度条件下的表现，同时引入地面反照率并支持光谱天空辐亮度。
+
+2020 年，Hillaire 在 *A Scalable and Production Ready Sky and Atmosphere Rendering Technique* 中以若干低维查找表和实时多次散射近似取代笨重的高维预计算结构，使物理天空与大气渲染更容易集成到现代游戏引擎中。
+
+2021 年，Wilkie 等人提出 *A Fitted Radiance and Attenuation Model for Realistic Atmospheres*，即 Prague Sky Model。该模型依据实测大气分布进行拟合，不仅支持日落后的天空、不同观察高度和有限距离透射，还能描述偏振现象，使天空模型覆盖的时间、空间和光学条件得到进一步扩展。

@@ -26,7 +26,7 @@ export function baseOptions(): BaseLayoutProps {
               <NavbarMenuContent>
 
                 <NavbarMenuCard
-                    slug={['alpha3d', 'sky_light', 'sky_atmosphere']}
+                    slug={['alpha3d', 'sky_light', 'sky_atmosphere_1993']}
                     imageSrc="/images/sky_atmosphere.png"
                   />
                 
