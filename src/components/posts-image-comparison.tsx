@@ -12,7 +12,6 @@ interface ImageComparisonProps {
   afterAlt?: string;
   beforeLabel?: string;
   afterLabel?: string;
-  position?: number;
 }
 
 export function ImageComparison({
