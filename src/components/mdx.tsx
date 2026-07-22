@@ -5,6 +5,7 @@ import { OssImage } from '@/components/posts-image';
 import { ImageComparison } from '@/components/posts-image-comparison';
 import { ImageSequenceSlider } from '@/components/posts-image-sequence-slider';
 
+import { GithubInfo } from 'fumadocs-ui/components/github-info';
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -12,6 +13,7 @@ export function getMDXComponents(components?: MDXComponents) {
     OssImage,
     ImageComparison,
     ImageSequenceSlider,
+    GithubInfo,
     ...components,
   } satisfies MDXComponents;
 }

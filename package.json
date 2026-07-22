@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev",
+    "dev": "node --max-old-space-size=4096 node_modules/next/dist/bin/next dev",
     "start": "next start",
     "clear": "node -e \"const fs=require('node:fs'); for (const dir of ['.next','.source']) fs.rmSync(dir,{recursive:true,force:true});\"",
     "types:check": "fumadocs-mdx && next typegen && tsc --noEmit",

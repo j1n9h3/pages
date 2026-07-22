@@ -8,6 +8,7 @@ interface OssImageProps {
 	alt: string;
 	width?: number;
 	height?: number;
+	fill?: boolean;
 	className?: string;
 	sizes?: string;
 	quality?: number;
@@ -28,7 +29,8 @@ interface OssImageProps {
 		alt,
 		width,
 		height,
-		className = "m-auto object-cover rounded-lg",
+		fill = false,
+		className,
 		sizes,
 		priority = false,
 		processing = "2webp",
@@ -60,12 +62,16 @@ interface OssImageProps {
 	};
 
 	const imageUrl = buildOssUrl(src);
+	const imageClassName = className ?? (fill
+		? "object-cover rounded-lg"
+		: "m-auto h-auto object-cover rounded-lg");
+	const imageContainerClassName = `${fill ? "relative " : ""}${containerClassName}`;
 
 	if (error) {
 		return (
-		<div className={containerClassName}>
+		<div className={imageContainerClassName}>
 			<div
-			className={`flex items-center justify-center bg-stone-900 my-2 text-stone-500 w-full h-64 ${className}`}
+				className={`flex items-center justify-center bg-stone-900 my-2 text-stone-500 w-full h-64 ${imageClassName}`}
 			
 			>
 			<span className="text-lg font-light ">图片加载失败</span>
@@ -75,14 +81,15 @@ interface OssImageProps {
 	}
 
 	return (
-		<div className={containerClassName}>
+		<div className={imageContainerClassName}>
 		<Image
 			src={imageUrl}
 			alt={alt}
-			width={width}
-			height={height}
-			className={className}
-			sizes={sizes}
+			width={fill ? undefined : width}
+			height={fill ? undefined : height}
+			fill={fill}
+			className={imageClassName}
+			sizes={fill ? (sizes ?? "100vw") : sizes}
 			priority={priority}
 			onError={() => {
 			setError(true);

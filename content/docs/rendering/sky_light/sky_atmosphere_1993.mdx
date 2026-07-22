@@ -3,29 +3,37 @@ title: 天空和大气的渲染 单散射实现
 description: 参考 1993 年工作的大气渲染单次散射实现
 ---
 
+
+<Card
+  title="完整代码实现"
+  href="https://github.com/j1n9h3/Alpha3D/blob/v0.1.6/shaders/sky_atmosphere_1993.frag"
+>
+  Alpha3D v0.1.6
+</Card>
+
 <ImageSequenceSlider
   images={[
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-57.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-58.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-59.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-60.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-61.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-62.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-63.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-64.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-65.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-66.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-67.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-69.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-70.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-71.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-72.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-73.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-74.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-75.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-76.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-77.png",
-    "images/sky_atmosphere/sky_atmosphere_1993_slider/photo-78.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-57.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-58.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-59.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-60.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-61.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-62.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-63.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-64.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-65.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-66.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-67.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-69.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-70.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-71.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-72.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-73.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-74.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-75.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-76.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-77.png",
+    "sky_atmosphere/sky_atmosphere_1993_slider/photo-78.png",
   ]}
 />
 
@@ -33,16 +41,17 @@ description: 参考 1993 年工作的大气渲染单次散射实现
 参照论文 [Nishita 1993 - Display of The Earth Taking into Account Atmospheric Scattering](https://dl.acm.org/doi/abs/10.1145/166117.166140) 实现。
 
 <OssImage
-  src="images/sky_atmosphere_1993.svg"
+  src="sky_atmosphere/sky_atmosphere_1993.svg"
   alt="天空和大气的渲染"
   width={320}
   height={320}
-  caption="图1：天空和大气的渲染效果"
 />
 
-观察射线从观察点 $P_v$ 出发，在 $P_a$ 进入大气层，并在 $P_b$ 与地球表面相交，摄像机最终接收到两部分光：
-1. 路径 $P_aP_b$ 上的大气散射光 $I_v$。太阳光到达每个大气采样点 $P$ 后，一部分光被散射向观察者，并在传播到 $P_v$ 的过程中继续受到大气衰减。
-2. 地球表面的反射光 $I_e$。太阳光和天空光照亮地表 $P_b$，地表将光反射向观察者；这部分光在穿过 $P_bP_a$ 之间的大气时也会受到衰减。
+观察射线从观察点 $P_v$ 出发，在 $P_a$ 处进入大气层，并在 $P_b$ 处与地球表面相交。摄像机最终接收到的光，可以描述为路径 $P_aP_b$ 上各点产生的大气散射光 $I_v$ 的累积。太阳光到达路径上的某个大气采样点 $P$ 后，一部分光被散射到观察方向，并在从 $P$ 传播到观察点 $P_v$ 的过程中继续受到大气消光作用。
+
+地球大气主要由氮气、氧气等气体分子，以及臭氧和气溶胶等成分组成。臭氧等物质会选择性地吸收特定波长的光；气体分子和气溶胶则会使光发生散射。气体分子的尺度远小于可见光波长，其散射通常使用瑞利散射描述；气溶胶颗粒的尺度与可见光波长接近，其散射通常使用米氏散射描述。
+
+光的散射由散射系数和相位函数共同描述，光的吸收与整体衰减则由吸收系数以及比尔–朗伯定律描述。摄像机接收到的大气散射光，是观察路径上各采样点产生的散射贡献经过两段路径衰减后累积得到的结果。
 
 ## 光散射的描述
 
@@ -57,6 +66,11 @@ $$
 - $K$ 与空气分子物理性质有关，为常数；
 - $\rho$ 描述当前高度的相对空气密度，$\rho(h)=\exp\left(-\frac{h}{H_0}\right)$；
 - $F_R(\theta)$ 表示散射相函数，描述散射的方向分布。
+
+指数密度模型在 Shader 中可以直接写成：
+
+
+其中返回值的两个分量分别保存瑞利粒子和米氏粒子的相对密度。后续只需乘以各自的散射系数，就能得到采样点处的散射强度。
 
 ## 光学深度
 
@@ -75,6 +89,11 @@ t(S,\lambda)
 \tag{2}
 $$
 
+连续积分在 GPU 上需要离散为有限个采样点。将长度为 `rayLength` 的路径均分为 $N$ 段，并使用中点法累积柱密度：
+
+
+`columnDensity` 对应 $\int\rho(s)\,ds$，最后分别乘以 RGB 消光系数，得到式（2）中的光学深度 $\tau$。
+
 ## Beer–Lambert 衰减
 
 光穿过介质时，光强会随着传播距离按指数形式减小
@@ -84,6 +103,9 @@ I_{\mathrm{out}}=I_{\mathrm{in}}e^{-\tau}. \tag{3}
 $$
 
 其中 $\tau$ 表示光学深度，$e^{-\tau}$ 即透射率(transmittance)，表示剩余的光比例。
+
+
+GLSL 的 `exp` 会逐分量计算，因此 RGB 三个波段可以同时应用 Beer–Lambert 衰减。
 
 ## 单次散射的路径积分
 
@@ -167,36 +189,35 @@ I_s(\lambda)\beta_R(\lambda)p_R(\theta)
 \tag{14}
 $$
 
-## 伪代码
+式（14）对应两层积分：外层沿观察射线寻找产生散射的采样点，内层计算太阳到采样点以及采样点到观察者两段路径的透射率。离散后的核心结构如下：
 
-```glsl
-for (int i = 0; i < PRIMARY_STEPS; ++i)
-{
-    ...
-    vec3 localDensity = AtmosphereDensity(height) * stepSize;
-    opticalDepth += localDensity;
 
-    for (int j = 0; j < LIGHT_STEPS; ++j)
-    {
-        ...
-        lightOpticalDepth += AtmosphereDensity(lightHeight) * lightStepSize;
-    }
+其中 `sunTransmittance` 对应 $\exp[-t(PP_c)]$，`viewTransmittance` 对应 $\exp[-t(PP_a)]$，`localScattering * stepLength` 则是采样点 $P$ 对外层积分的一小段贡献。
 
-    vec3 combinedDepth = opticalDepth + lightOpticalDepth; 
-    vec3 attenuation = exp(-rayleighBeta * combinedDepth.x 
-                            - mieBeta * combinedDepth.y 
-                            - absorptionBeta * combinedDepth.z);
-    totalRayleigh += localDensity.x * attenuation;
-    totalMie += localDensity.y * attenuation;
-}
 
-vec3 transmittance = exp(-rayleighBeta * opticalDepth.x
-                            - mieBeta * opticalDepth.y
-                            - absorptionBeta * opticalDepth.z);
-vec3 scatteredLight = (rayleighPhase * rayleighBeta * totalRayleigh
-                        + miePhase * mieBeta * totalMie) * lightIntensity;
-return scatteredLight + background * transmittance;
-```
+
+## 大气密度分布
+
+实现分别计算瑞利散射粒子、米氏散射粒子和吸收介质的相对密度。设采样点海拔高度为 $h$，瑞利和米氏密度都使用指数大气模型：
+
+$$
+\rho_R(h)=\exp\left(-\frac{h}{H_R}\right),
+\qquad
+\rho_M(h)=\exp\left(-\frac{h}{H_M}\right). \tag{12}
+$$
+
+$H_R$ 和 $H_M$ 分别是瑞利与米氏密度的标高。标高越大，密度随高度下降得越慢。气溶胶通常集中在近地面，因此米氏标高通常明显小于瑞利标高。
+
+吸收介质使用以 $h_A$ 为中心、由 $H_A$ 控制宽度的钟形分布：
+
+$$
+o(h)=\frac{h_A-h}{H_A},
+\qquad
+\rho_A(h)=\frac{\rho_R(h)}{o(h)^2+1}. \tag{13}
+$$
+
+分母让密度在吸收层中心附近较大，并随偏离中心的距离平滑下降；额外乘以瑞利密度，使高空部分继续随整体大气密度衰减。这是适合实时渲染的简化分布，而不是对真实臭氧浓度剖面的严格拟合。
+
 
 ## 可见光光谱
 
@@ -205,7 +226,7 @@ return scatteredLight + background * transmittance;
 
 
 <OssImage
-  src="/images/sky_atmosphere/visible_spectrum.png"
+  src="/sky_atmosphere/visible_spectrum.png"
   alt="天空和大气的渲染"
   width={600}
   height={72}
@@ -236,8 +257,8 @@ $$
 白天，天空蓝光被更多地散射到观察者方向，使天空呈蓝色。
 
 <ImageComparison
-  before="/images/sky_atmosphere/sky_atmosphere_1993_rayleigh-wo-1.png"
-  after="/images/sky_atmosphere/sky_atmosphere_1993_rayleigh-w-1.png"
+  before="/sky_atmosphere/sky_atmosphere_1993_rayleigh-wo-1.png"
+  after="/sky_atmosphere/sky_atmosphere_1993_rayleigh-w-1.png"
   beforeAlt="None"
   afterAlt="Rayleigh"
   beforeLabel="None"
@@ -247,8 +268,8 @@ $$
 日出和日落时，太阳光经过更长的大气路径，蓝光被大量散射出去，直射太阳光偏橙红色。
 
 <ImageComparison
-  before="/images/sky_atmosphere/sky_atmosphere_1993_rayleigh-wo-2.png"
-  after="/images/sky_atmosphere/sky_atmosphere_1993_rayleigh-w-2.png"
+  before="/sky_atmosphere/sky_atmosphere_1993_rayleigh-wo-2.png"
+  after="/sky_atmosphere/sky_atmosphere_1993_rayleigh-w-2.png"
   beforeAlt="None"
   afterAlt="Rayleigh"
   beforeLabel="None"
@@ -263,6 +284,9 @@ $$
 
 它表示散射光在前向和后向较强，在侧向相对较弱，并且前后方向基本对称。
 
+
+实现时直接传入 $\cos\theta$，避免在每个采样点调用 `acos`。由于太阳光被视为平行光，同一条观察射线上的 `cosTheta` 保持不变，因此相函数可以移到积分循环外计算一次。
+
 ## 米氏散射
 
 米氏散射（Mie）用于描述气溶胶、灰尘、水滴等较大颗粒对光的散射。米氏散射通常具有明显的前向散射特征，即光更容易沿原来的传播方向被散射。因此，朝太阳方向观察时会看到更强的亮度和光晕。
@@ -276,6 +300,9 @@ p_M(\theta)
 {4\pi\left(1+g^2-2g\cos\theta\right)^{3/2}}
 $$
 
+
+`max` 用来防止 $g$ 和 $\cos\theta$ 接近 1 时分母过小。这个方向正是米氏前向散射最集中的区域，也对应太阳周围明亮的光晕。
+
 其中 $g$ 是米氏各向异性系数：
 
 | $g$ | 散射方向 |
@@ -288,8 +315,8 @@ $$
 实现中 $g=0.7$，表示具有比较明显的前向散射，所以太阳周围会形成较集中的亮光晕。
 
 <ImageComparison
-  before="/images/sky_atmosphere/sky_atmosphere_1993_mie-wo-1.png"
-  after="/images/sky_atmosphere/sky_atmosphere_1993_mie-w-1.png"
+  before="/sky_atmosphere/sky_atmosphere_1993_mie-wo-1.png"
+  after="/sky_atmosphere/sky_atmosphere_1993_mie-w-1.png"
   beforeAlt="Rayleigh"
   afterAlt="Rayleigh + Mie"
   beforeLabel="Rayleigh"
@@ -302,12 +329,18 @@ $$
 
 臭氧层选择性地削弱部分可见光，臭氧对绿光吸收最强，对红光次之，对蓝光最弱（$\beta_G \gt \beta_R \gt \beta_B$）。
 
+实现使用一个以 `absorptionHeight` 为中心的平滑密度层近似臭氧分布：
+
+
+计算消光时，臭氧密度只乘以吸收系数，不会像瑞利或米氏粒子一样产生朝观察方向的散射贡献：
+
+
 
 日出、日落时，光在大气中的传播路径变长，臭氧对绿色和黄绿色成分的选择性吸收更加明显，从而改变天空的色彩平衡，使部分区域呈现更明显的蓝紫色或粉紫色过渡。
 
 <ImageComparison
-  before="/images/sky_atmosphere/sky_atmosphere_1993_absorption-wo-2.png"
-  after="/images/sky_atmosphere/sky_atmosphere_1993_absorption-w-2.png"
+  before="/sky_atmosphere/sky_atmosphere_1993_absorption-wo-2.png"
+  after="/sky_atmosphere/sky_atmosphere_1993_absorption-w-2.png"
   beforeAlt="Rayleigh + Mie"
   afterAlt="Rayleigh + Mie + Absorption"
   beforeLabel="Rayleigh + Mie"
@@ -318,8 +351,8 @@ $$
 从太空观察时，大气分子产生的瑞利散射使行星边缘呈现蓝色光环，臭氧吸收会进一步削弱部分红光和绿光，从而改变并强化大气边缘的颜色表现。
 
 <ImageComparison
-  before="/images/sky_atmosphere/sky_atmosphere_1993_absorption-wo-1.png"
-  after="/images/sky_atmosphere/sky_atmosphere_1993_absorption-w-1.png"
+  before="/sky_atmosphere/sky_atmosphere_1993_absorption-wo-1.png"
+  after="/sky_atmosphere/sky_atmosphere_1993_absorption-w-1.png"
   beforeAlt="Rayleigh + Mie"
   afterAlt="Rayleigh + Mie + Absorption"
   beforeLabel="Rayleigh + Mie"

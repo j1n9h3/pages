@@ -1,0 +1,283 @@
+---
+title: 天空和大气的渲染 透射率 LUT
+description: 参考 2020 年 Hillaire 工作的大气透射率预计算实现
+---
+
+<Card
+  title="完整代码实现"
+  href="https://github.com/j1n9h3/Alpha3D/blob/v0.1.7/shaders/sky_atmosphere/render_transmittance_lut.frag"
+>
+Alpha3D v0.1.7
+</Card>
+
+参照论文 [*Hillaire 2020 - A Scalable and Production Ready Sky and Atmosphere Rendering Technique*](https://sebh.github.io/publications/egsr2020.pdf) 中的实时大气渲染方案实现。
+
+2020 年的实现将计算量较大的大气积分拆分到若干查找表中。透射率 LUT（Transmittance LUT）是其中最基础的一张表：它记录光线从大气中的某个位置出发，沿给定方向传播至大气层顶端后所剩余的光照比例。后续计算天空视图、太阳直射光和多次散射时，都可以直接查询这张纹理，避免反复计算相同的光学深度积分。
+
+<OssImage
+  src="sky_atmosphere/sky_atmosphere_2020_3.svg"
+  alt="天空和大气的渲染"
+  width={320}
+  height={320}
+/>
+
+由于大气和行星都被近似为同心球，透射率只与两个量有关：观察点到行星中心的距离 $r$，以及观察方向与当地天顶方向夹角的余弦值 $\mu$。因此可以用一张二维纹理表示：
+
+$$
+T(r,\mu)=\exp\left[-\tau(r,\mu)\right]. \tag{1}
+$$
+
+其中 $\tau$ 是光线从观察点到大气层顶端的光学深度，$T$ 为 RGB 三通道透射率。
+
+## 透射率 LUT 的输入输出
+
+要解决的是 LUT 纹理坐标与大气几何参数之间的转换。输入是归一化纹理坐标 $(u,v)\in[0,1]^2$；输出是观察点到行星中心的距离 $r$ 和观察方向的天顶角余弦 $\mu$。得到 $(r,\mu)$ 后，便可以计算对应方向上的光学深度与透射率 $T(r,\mu)$。
+
+如果直接将高度和全部天顶角线性映射到纹理坐标，会有一部分纹素对应视线接触行星表面的情况。这种情况不会用于查询，却仍会占用纹理空间。实现中使用 *[Bruneton 2008 - Precomputed Atmospheric Scattering](https://ebruneton.github.io/precomputed_atmospheric_scattering/)* 的参数化，只表示视线切线到垂直地面之间的天顶角部分。
+
+<OssImage
+  src="sky_atmosphere/sky_atmosphere_2020_6.svg"
+  alt="天空和大气的渲染"
+  width={320}
+  height={320}
+/>
+
+设行星半径为 $R_p$，大气层半径为 $R_a$。从行星表面的切线点到大气层顶端的距离为：
+
+$$
+H=\sqrt{R_a^2-R_p^2}. \tag{2}
+$$
+
+纹理纵坐标 $v$ 首先映射为辅助距离 $\rho$：
+
+$$
+\rho=Hv. \tag{3}
+$$
+
+由直角三角形关系，可以恢复观察点到行星中心的距离：
+
+$$
+r=\sqrt{\rho^2+R_p^2}. \tag{4}
+$$
+
+因此 $v=0$ 对应行星表面，$v=1$ 对应大气层顶端。相较于直接插值高度，这种映射会为靠近地表、密度变化更快的区域分配更多纹素。
+
+在高度 $r$ 处，沿径向向上到达大气层顶端的最短距离为：
+
+$$
+d_{\min}=R_a-r. \tag{5}
+$$
+
+与行星表面相切并到达大气层顶端的最长距离为：
+
+$$
+d_{\max}=\rho+H. \tag{6}
+$$
+
+纹理横坐标 $u$ 在这两个边界之间插值得到射线长度：
+
+$$
+d=(1-u)d_{\min}+u d_{\max}. \tag{7}
+$$
+
+<OssImage
+  src="sky_atmosphere/sky_atmosphere_2020_8.svg"
+  alt="天空和大气的渲染"
+  width={320}
+  height={320}
+/>
+
+最后根据由行星中心、观察点和大气层交点构成的三角形，使用余弦定理恢复观察方向的天顶角余弦。设行星中心为 $O$、观察点为 $P$、射线与大气层顶端的交点为 $Q$，则三条边分别为
+
+$$
+OP=r,
+\qquad
+PQ=d,
+\qquad
+OQ=R_a.
+$$
+
+令观察方向与观察点处向外的天顶方向之间的夹角为 $\theta$，于是 $\mu=\cos\theta$。需要注意，三角形在 $P$ 点的内角不是 $\theta$，而是它的补角 $\pi-\theta$。根据余弦定理：
+
+$$
+R_a^2
+=r^2+d^2-2rd\cos(\pi-\theta)
+=r^2+d^2+2rd\mu.
+$$
+
+整理可得：
+
+$$
+\mu=\frac{R_a^2-r^2-d^2}{2rd}.
+$$
+
+又因为前面已经得到
+
+$$
+H^2=R_a^2-R_p^2,
+\qquad
+\rho^2=r^2-R_p^2,
+$$
+
+所以
+
+$$
+H^2-\rho^2=R_a^2-r^2.
+$$
+
+代入上式，最终得到：
+
+$$
+\mu
+=
+\frac{H^2-\rho^2-d^2}{2rd}. \tag{8}
+$$
+
+其中 $\mu=1$ 表示竖直向上，$\mu=0$ 表示与当地地平线平行，$\mu<0$ 表示方向朝向行星一侧。实现中将最终结果限制在 $[-1,1]$ 内，并在 $d$ 接近零时直接令 $\mu=1$，避免除零。
+
+至此，我们得到了从 LUT 纹理坐标 $(u,v)$ 到大气几何参数 $(r,\mu)$ 的完整映射：纵坐标 $v$ 决定观察点半径 $r$，横坐标 $u$ 决定射线长度 $d$，再由 $r$ 和 $d$ 恢复观察方向的天顶角余弦 $\mu$。每个纹素因此都对应一条确定的、从大气内部指向大气层顶端的射线。
+
+
+
+## 透射率 LUT 的写入
+
+### 到大气层顶端的距离
+
+接下来需要为 LUT 的每个纹素写入这条射线对应的透射率 $T(r,\mu)$。透射率由沿途累积的光学深度决定，因此需要沿射线对大气介质密度进行积分。在进行积分之前，首先要确定射线从观察点到大气层顶端的路径长度，也就是积分上限 $s_{\mathrm{top}}$。
+
+<OssImage
+  src="sky_atmosphere/sky_atmosphere_2020_9.svg"
+  alt="天空和大气的渲染"
+  width={320}
+  height={320}
+/>
+
+从观察点 $\boldsymbol{p}_0$ 出发，沿方向 $\boldsymbol{\omega}$ 前进距离 $s$，得到射线上的位置：
+
+$$
+\boldsymbol{p}(s)=\boldsymbol{p}_0+s\boldsymbol{\omega}.
+$$
+
+
+观察点处的当地天顶方向就是从行星中心指向观察点的方向。由于 $\boldsymbol{p}_0$ 的长度为 $r$，对应的单位向量为：
+
+$$
+\boldsymbol{n}=\frac{\boldsymbol{p}_0}{r}.
+$$
+
+天顶角 $\theta$ 是当地天顶方向 $\boldsymbol{n}$ 与观察方向 $\boldsymbol{\omega}$ 的夹角。两个单位向量的点积等于夹角余弦，因此：
+
+$$
+\mu
+=\cos\theta
+=\boldsymbol{n}\cdot\boldsymbol{\omega}
+=\frac{\boldsymbol{p}_0}{r}\cdot\boldsymbol{\omega}.  \tag{9}
+$$
+
+根据前面得到的观察点半径 $r$ 和观察方向 $\boldsymbol{\omega}$，求出射线到达大气层顶端时的参数 $s_{\mathrm{top}}$：
+
+$$
+\left\|\boldsymbol{p}_0+s\boldsymbol{\omega}\right\|^2=R_a^2. \tag{10}
+$$
+
+$$
+\left\|\boldsymbol{p}_0\right\|^2
+  +2s\,\boldsymbol{p}_0\cdot\boldsymbol{\omega}
+  +s^2\left\|\boldsymbol{\omega}\right\|^2=R_a^2. 
+$$
+
+由 $\|\boldsymbol{p}_0\|=r$、$\|\boldsymbol{\omega}\|=1$，以及式（9）中的 $\boldsymbol{p}_0\cdot\boldsymbol{\omega}=r\mu$，代入式（10）得到：
+
+$$
+r^2+2r\mu s+s^2=R_a^2.
+$$
+
+移项后得到关于 $s$ 的二次方程：
+
+$$
+s^2+2r\mu s+(r^2-R_a^2)=0.
+$$
+
+使用求根公式：
+
+$$
+\begin{aligned}
+s
+&=\frac{-2r\mu\pm\sqrt{(2r\mu)^2-4(r^2-R_a^2)}}{2}
+&=-r\mu\pm\sqrt{r^2(\mu^2-1)+R_a^2}.
+\end{aligned}
+$$
+
+两个根对应直线与大气层球面的两个交点：较小的根位于射线反方向，较大的根位于观察方向的前方。光学深度只沿观察方向积分，因此取较大的根，得到观察点到大气层顶端的距离：
+
+$$
+s_{\mathrm{top}}
+=-r\mu+\sqrt{r^2(\mu^2-1)+R_a^2}. \tag{11}
+$$
+
+因此，$s_{\mathrm{top}}$ 表示射线从观察点出发、沿 $\boldsymbol{\omega}$ 前进至大气层顶端所经过的实际距离。Shader 中对根号内的值和最终距离取非负值，以减小浮点误差在球面边界附近造成的影响。
+
+
+### 光学深度的数值积分
+
+对一条长度为 $s_{\mathrm{top}}$ 的射线，三种介质各自的柱密度为：
+
+$$
+D_i(r,\mu)
+=
+\int_0^{s_{\mathrm{top}}}
+\rho_i\!\left(h(s)\right)\,\mathrm{d}s,
+\qquad i\in\{R,M,A\}. \tag{14}
+$$
+
+其中，射线上距离起点 $s$ 处的高度半径（地心距离）为：
+
+$$
+r_s=\sqrt{r^2+s^2+2r\mu s},
+\qquad
+h(s)=r_s-R_p. \tag{15}
+$$
+
+实现将射线平均分成 $N$ 段，每段长度为 $\Delta s=s_{\mathrm{top}}/N$，并使用中点法近似积分：
+
+$$
+D_i(r,\mu)
+\approx
+\sum_{j=0}^{N-1}
+\rho_i\!\left(h\left((j+\tfrac12)\Delta s\right)\right)\Delta s. \tag{16}
+$$
+
+中点法不会恰好采样行星表面或大气层顶端，能够减弱球形边界和密度突变对数值积分的影响。`transmittanceSteps` 越大，积分越准确，但生成 LUT 的成本也越高。
+
+### Beer–Lambert 透射率
+
+设 $\boldsymbol{\beta}_R$、$\boldsymbol{\beta}_M$ 和 $\boldsymbol{\beta}_A$ 分别为三种介质的 RGB 消光系数，总光学深度为：
+
+$$
+\boldsymbol{\tau}
+=
+\boldsymbol{\beta}_R D_R
++\boldsymbol{\beta}_M D_M
++\boldsymbol{\beta}_A D_A. \tag{17}
+$$
+
+根据 Beer–Lambert 定律，最终透射率为：
+
+$$
+\boldsymbol{T}(r,\mu)=\exp(-\boldsymbol{\tau}). \tag{18}
+$$
+
+三种介质都会移除沿原方向传播的光，因此它们的消光贡献应当相加。
+
+
+## 透射率 LUT 结果
+
+<OssImage
+  src="sky_atmosphere/sky_atmosphere_2020_transmittance_lut.png"
+  alt="天空和大气的渲染"
+  width={2562}
+  height={640}
+/>
+
+LUT 中接近白色的区域表示大部分光能够穿过大气，接近黑色的区域表示光线经过了较长或较浓的大气路径。由于瑞利消光对蓝光更强，长距离传播后的透射光通常更偏向红色。
+

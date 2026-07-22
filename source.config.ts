@@ -25,5 +25,6 @@ export default defineConfig({
     remarkPlugins: [remarkMath],
     // Place it at first, it should be executed before the syntax highlighter
     rehypePlugins: (v) => [rehypeKatex, ...v],
+    rehypeCodeOptions: false,
   },
 });
