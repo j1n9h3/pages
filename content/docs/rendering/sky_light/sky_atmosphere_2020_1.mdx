@@ -269,8 +269,7 @@ $$
 
 三种介质都会移除沿原方向传播的光，因此它们的消光贡献应当相加。
 
-
-## 透射率 LUT 结果
+### 透射率 LUT 图
 
 <OssImage
   src="sky_atmosphere/sky_atmosphere_2020_transmittance_lut.png"
@@ -279,5 +278,33 @@ $$
   height={640}
 />
 
-LUT 中接近白色的区域表示大部分光能够穿过大气，接近黑色的区域表示光线经过了较长或较浓的大气路径。由于瑞利消光对蓝光更强，长距离传播后的透射光通常更偏向红色。
+透射率 LUT 中接近白色的区域表示大部分光能够穿过大气，接近黑色的区域表示光线经过了较长或较浓的大气路径。由于瑞利消光对蓝光更强，长距离传播后的透射光通常更偏向红色。
+
+
+## 应用透射率 LUT 的结果
+
+视觉上看，直接读取 LUT 和 64 步光线步进效果完全一样。
+
+<ImageComparison
+  before="/sky_atmosphere/sky_atmosphere_2020_transmittance_lut_before.png"
+  after="/sky_atmosphere/sky_atmosphere_2020_transmittance_lut_after.png"
+  beforeAlt="None"
+  afterAlt="None"
+  beforeLabel="64 Steps Ray-marching"
+  afterLabel="LUT"
+/>
+
+相比不用 LUT，使用 LUT 分别比 64、32 和 16 个 Light Steps 快约 28.4 倍、14.9 倍和 8.2 倍。
+
+<ChartBarComparison
+  title="GPU 时间对比"
+  data={[
+    { label: "With LUT, 64 Light Steps", value: 0.231, accent: true },
+    { label: "Without LUT, 64 Light Steps", value: 6.565 },
+    { label: "Without LUT, 32 Light Steps", value: 3.45 },
+    { label: "Without LUT, 16 Light Steps", value: 1.9 },
+  ]}
+  unit="ms"
+  accentColor="red"
+/>
 
