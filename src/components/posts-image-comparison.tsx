@@ -25,7 +25,7 @@ export function ImageComparison({
   return (
     <div className="my-8">
         <ReactCompareSlider
-        className="not-prose my-0 block aspect-video w-full overflow-hidden rounded-lg"
+        className="not-prose my-0 block aspect-video w-full overflow-hidden"
         itemOne={
             <div className="relative h-full w-full">
             <ReactCompareSliderImage
@@ -34,7 +34,7 @@ export function ImageComparison({
                 className="h-full w-full object-cover"
             />
 
-            <span className="absolute left-4 bottom-4 rounded bg-black/60 px-3 py-1 text-sm text-white">
+            <span className="absolute left-4 bottom-4 bg-black/60 px-3 py-1 text-sm text-white">
                 {beforeLabel}
             </span>
             </div>
@@ -47,7 +47,7 @@ export function ImageComparison({
                 className="h-full w-full object-cover"
             />
 
-            <span className="absolute right-4 bottom-4 rounded bg-black/60 px-3 py-1 text-sm text-white">
+            <span className="absolute right-4 bottom-4 bg-black/60 px-3 py-1 text-sm text-white">
                 {afterLabel}
             </span>
             </div>

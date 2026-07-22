@@ -63,8 +63,8 @@ interface OssImageProps {
 
 	const imageUrl = buildOssUrl(src);
 	const imageClassName = className ?? (fill
-		? "object-cover rounded-lg"
-		: "m-auto h-auto object-cover rounded-lg");
+		? "object-cover"
+		: "m-auto h-auto object-cover");
 	const imageContainerClassName = `${fill ? "relative " : ""}${containerClassName}`;
 
 	if (error) {

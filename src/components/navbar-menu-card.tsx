@@ -23,12 +23,12 @@ export function NavbarMenuCard({
           alt={page.data.title}
           width={320}
           height={180}
-          className="aspect-21/9 w-full rounded-md object-cover"
+          className="aspect-21/9 w-full object-cover"
         />
       ) : (
         <div
           aria-hidden="true"
-          className="aspect-21/9 w-full rounded-md bg-fd-muted"
+          className="aspect-21/9 w-full bg-fd-muted"
         />
       )}
 

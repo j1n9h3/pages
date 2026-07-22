@@ -290,7 +290,7 @@ $$
   after="/sky_atmosphere/sky_atmosphere_2020_transmittance_lut_after.png"
   beforeAlt="None"
   afterAlt="None"
-  beforeLabel="64 Steps Ray-marching"
+  beforeLabel="64 Light Steps"
   afterLabel="LUT"
 />
 
@@ -299,12 +299,11 @@ $$
 <ChartBarComparison
   title="GPU 时间对比"
   data={[
-    { label: "With LUT, 64 Light Steps", value: 0.231, accent: true },
+    { label: "With LUT, 64 Light Steps", value: 0.231 },
     { label: "Without LUT, 64 Light Steps", value: 6.565 },
     { label: "Without LUT, 32 Light Steps", value: 3.45 },
     { label: "Without LUT, 16 Light Steps", value: 1.9 },
   ]}
   unit="ms"
-  accentColor="red"
+  accent="With LUT, 64 Light Steps"
 />
-

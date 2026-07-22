@@ -56,7 +56,7 @@ export function ImageSequenceSlider({
 
   return (
     <figure className={`not-prose my-8 ${className}`}>
-      <div className="relative overflow-hidden rounded-lg bg-stone-900">
+      <div className="relative overflow-hidden bg-stone-900">
         <Image
           src={getImageUrl(src, processing)}
           alt={alt}
@@ -66,7 +66,7 @@ export function ImageSequenceSlider({
         />
 
         {label && (
-          <figcaption className="absolute bottom-3 left-3 rounded bg-black/60 px-3 py-1 text-sm text-white">
+          <figcaption className="absolute bottom-3 left-3 bg-black/60 px-3 py-1 text-sm text-white">
             {label}
           </figcaption>
         )}
